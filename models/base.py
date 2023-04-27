@@ -98,7 +98,7 @@ class DataParallel(Model, torch.nn.DataParallel):
         self.module.save(save_location, save_step)
 
 
-class DistributedDataParallel(Model, torch.nn.parallel.DistributedDataParallel):
+class DistributedDataParallel(Model):
     def __init__(self, module: Model, device_ids):
         super(DistributedDataParallel, self).__init__(module=module, device_ids=device_ids)
 
