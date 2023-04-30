@@ -11,6 +11,8 @@ from lottery.desc import LotteryDesc
 from models import base
 from pruning import sparse_global
 
+import numpy as np
+
 
 class Model(base.Model):
     """A residual neural network as originally designed for CIFAR-10."""
@@ -51,13 +53,25 @@ class Model(base.Model):
         self.conv = nn.Conv2d(3, current_filters, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn = nn.BatchNorm2d(current_filters)
 
+        print(plan)
         # The subsequent blocks of the ResNet.
         blocks = []
         for segment_index, (filters, num_blocks) in enumerate(plan):
+            print(segment_index)
+            print(num_blocks)
+            print('----------------------')
             for block_index in range(num_blocks):
+                print("****************")
+                print(len(blocks))
+                print("****************")
                 downsample = segment_index > 0 and block_index == 0
+                if downsample:
+                    print("DOWNSAMPLE")
+                    print(segment_index)
+                    print(block_index)
                 blocks.append(Model.Block(current_filters, filters, downsample))
                 current_filters = filters
+            print('===============================================================================================')
 
         self.blocks = nn.Sequential(*blocks)
 
@@ -69,11 +83,24 @@ class Model(base.Model):
         self.apply(initializer)
 
     def forward(self, x):
+        print("INPUT")
+        print(np.shape(x))
         out = F.relu(self.bn(self.conv(x)))
+        print("STEP 1")
+        print(np.shape(out))
         out = self.blocks(out)
+        
+        print("AFTER BLOCKS")
+        print(np.shape(out))
         out = F.avg_pool2d(out, out.size()[3])
+        print("AFTER AVG POOL2D")
+        print(np.shape(out))
         out = out.view(out.size(0), -1)
+        print("AFTER WEIRD THING")
+        print(np.shape(out))
         out = self.fc(out)
+        print("AFTER FC")
+        print(np.shape(out))
         return out
 
     @property
