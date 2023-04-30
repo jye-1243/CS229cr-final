@@ -62,8 +62,6 @@ def layers_to_adj_matrix(blocks, block_sizes, total_size, mask=None):
 
     for b, block in enumerate(blocks):
         next_block += block_sizes[b]
-        if b == 0:
-            next_block -= 1
 
         print(curr_block)
         # print(len(block))
