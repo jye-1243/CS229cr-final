@@ -1,39 +1,14 @@
 import numpy as np
 import torch
 import math
+import csv
+import json
+
+from matplotlib import pyplot as plt
 
 # FOR MNIST
 # FOR LENET
 # INITIAL CODE
-
-PATH = '../open_lth_data/train_574e51abc295d8da78175b320504f2ba/replicate_1/main/model_ep0_it0.pth'
-
-PATH_LOTTO = "../open_lth_data/lottery_184ace1d6901ace6854b0a595cbd6b27/replicate_1/level_3/main/model_ep0_it0.pth"
-PATH_MASK = "../open_lth_data/lottery_184ace1d6901ace6854b0a595cbd6b27/replicate_1/level_3/main/mask.pth"
-
-network = torch.load(PATH_LOTTO)
-mask = torch.load(PATH_MASK)
-
-NUM_OUTPUTS = 10
-
-TOTAL_SIZE = 10
-block_sizes = []
-blocks = []
-
-mask_blocks = []
-
-for i in network:
-    if 'weight' in i:
-        TOTAL_SIZE += np.shape(network[i])[1]
-        block_sizes.append(np.shape(network[i])[1])
-        blocks.append(network[i])
-
-for i in mask:
-    if 'weight' in i:
-        mask_blocks.append(mask[i])
-
-block_sizes.append(10)
-
 
 def get_degree_matrix(a):
     degrees = np.sum(a, axis=1)
@@ -88,7 +63,7 @@ def layers_to_adj_matrix(blocks, block_sizes, total_size, mask=None):
     
     return adj
 
-def layers_to__unweighted_adj_matrix(blocks, block_sizes, total_size, mask=None):
+def layers_to_unweighted_adj_matrix(blocks, block_sizes, total_size, mask=None):
     adj = np.zeros((total_size, total_size))
 
     if not mask:
@@ -116,7 +91,7 @@ def spectral_expansion_from_A(A):
         return -1
 
     W = get_random_walk_matrix(A)
-    u, s, vh = np.linalg.svd(W, full_matrices=True)
+    s = np.linalg.svd(W, full_matrices=False, compute_uv = False)
 
     return 1 - s[1]
 
@@ -145,32 +120,176 @@ def leverage_from_A(A):
                 leverages[a][b] = A[a][b] * ER
                 counter += 1
                 
-    print(counter)
     return leverages
 
-A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+def regularize_A(A, r):
+    sums = np.sum(A, axis=1)
+    factors = np.zeros(len(sums))
 
-leverages = leverage_from_A(A)
-print(leverages)
-print(np.sum(leverages, axis=1))
+    for i in range(len(factors)):
+        if sums[i] != 0:
+            factors[i] = r / sums[i]
+    
+    for i in range(len(A)):
+        for j in range(len(A[0])):
+            A[i][j] = A[i][j] * factors[i]
+    
+   #  print(np.sum(A, axis=1))
+    return A
 
-# print(np.sum(A))
+def get_mask_from_level(i):
+    return "/replicate_1/level_" + str(i) + "/main/mask.pth"
 
-# print(np.sum(A, axis=1))
+def get_sparsity_report(i):
+    return "/replicate_1/level_" + str(i) + "/main/sparsity_report.json"
 
-# W = get_random_walk_matrix(A)
+def remove_disconnections(A):
+    del_A = A
 
-# print(W)
-# print(np.sum(W, axis=1))
-# print(np.sum(W))
+    zeros = []
+    sums = np.sum(A, axis=1)
 
-# u, s, vh = np.linalg.svd(W, full_matrices=True)
-# print(s)
-# unpruned_A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE)
-# pruned_A = prune_matrix(A, 0.5)
+    for i in range(len(sums)):
+        if sums[i] == 0:
+            zeros.append(i)
+    
+    for i in range(len(zeros) - 1, -1, -1):
+        del_A = np.delete(del_A, i, 0)
+        del_A = np.delete(del_A, i, 1)
 
-# W = get_random_walk_matrix(pruned_A)
+    return del_A
 
-# u, s, vh = np.linalg.svd(W, full_matrices=True)
-# print(s)
+def get_fiedler(A):
+    L = get_laplacian_matrix(A)
 
+    w, v = np.linalg.eig(L)
+    w.sort()
+    return w[1]
+
+
+PATH_START = "../open_lth_data/"
+LEVELS = 20
+
+PATHS = [
+    "lottery_49d62984dbfd626736d5fe53513edac9",
+    # "lottery_0fb9604a3c0ead8f41984073b4129f13"
+]
+DESCRIPTIONS = [
+    # "mnist_lenet_100_50",
+    "mnist_lenet_50_30"
+]
+PATH_END_LOTTO = "/replicate_1/level_0/main/model_ep0_it0.pth"
+D = 5
+with open('spectral_expansions.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(['Model', 'Level', 'Sparsity', 'Spectral Expansion', 'Performance', 'is_lotto'])
+    for index, p in enumerate(PATHS):
+        PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
+        network = torch.load(PATH_LOTTO)
+
+        for l in range(LEVELS):
+            
+            NUM_OUTPUTS = 10
+
+            TOTAL_SIZE = 10
+            PATH_MASK = PATH_START + p + get_mask_from_level(l)
+
+            j = open(PATH_START + p + get_sparsity_report(l))
+
+            sparsity_report = json.load(j)
+            sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
+            mask = torch.load(PATH_MASK)
+
+            block_sizes = []
+            blocks = []
+
+            mask_blocks = []
+
+            for i in network:
+                if 'weight' in i:
+                    TOTAL_SIZE += np.shape(network[i])[1]
+                    block_sizes.append(np.shape(network[i])[1])
+                    blocks.append(network[i])
+
+            for i in mask:
+                if 'weight' in i:
+                    mask_blocks.append(mask[i])
+
+            block_sizes.append(10)
+
+            A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+            # A = regularize_A(A, D)
+            del_A = remove_disconnections(A)
+
+            # print(np.shape(del_A))
+
+            spectral_expansion = spectral_expansion_from_A(del_A)
+
+            
+            writer.writerow([DESCRIPTIONS[index], l, sparsity, spectral_expansion])
+
+
+## THIS PART IS FOR LEVERAGE SCORES
+
+with open('leverages.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(['Model', 'Level', 'Sparsity', 'Average Leverage Score', 'Leverage STDev', 'Performance', 'is_lotto'])
+    for index, p in enumerate(PATHS):
+        PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
+        network = torch.load(PATH_LOTTO)
+
+        block_sizes = []
+        blocks = []
+            
+        NUM_OUTPUTS = 10
+
+        TOTAL_SIZE = 10
+
+        for i in network:
+            if 'weight' in i:
+                TOTAL_SIZE += np.shape(network[i])[1]
+                block_sizes.append(np.shape(network[i])[1])
+                blocks.append(network[i])
+
+        block_sizes.append(10)
+
+        unmasked_A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE)
+        unmasked_leverages = leverage_from_A(unmasked_A)
+
+        for l in range(LEVELS):
+
+            PATH_MASK = PATH_START + p + get_mask_from_level(l)
+
+            j = open(PATH_START + p + get_sparsity_report(l))
+
+            sparsity_report = json.load(j)
+            sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
+            mask = torch.load(PATH_MASK)
+
+            mask_blocks = []
+
+            for i in mask:
+                if 'weight' in i:
+                    mask_blocks.append(mask[i])
+
+            masked_A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+            leverages = np.multiply(unmasked_leverages, masked_A)
+
+            leverages = leverages.flatten()
+
+            leverages = leverages[leverages != 0]
+
+            # Creating histogram
+            fig, ax = plt.subplots(figsize =(10, 7))
+            ax.hist(leverages)
+            # Adding extra features   
+            plt.xlabel("Leverage Scores")
+            plt.ylabel("Count")
+            
+            plt.title('Leverage Scores for ' + DESCRIPTIONS[index] + " At Sparsity of " + str(sparsity))
+            # Show plot
+            plt.savefig(DESCRIPTIONS[index] + "_" + str(l) + ".png")
+            plt.show()
+
+            writer.writerow([DESCRIPTIONS[index], l, sparsity, np.mean(leverages), np.std(leverages)])
+            
