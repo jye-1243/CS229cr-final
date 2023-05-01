@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 # FOR LENET
 # INITIAL CODE
 
+'''Functions for Matrices'''
+
 def get_degree_matrix(a):
     degrees = np.sum(a, axis=1)
 
@@ -167,24 +169,31 @@ def get_fiedler(A):
     return w[1]
 
 
+'''Lottery Ticket Loading'''
+
 PATH_START = "open_lth_data/"
-LEVELS = 5
+LEVELS = 3
 
 PATHS = [
-    "lottery_10fb17529ead6251b09c22e037448a0d"
+    "lottery_42361caefd5798fd05ac49bf5c55a1dd" #400_50
+    # "lottery_10fb17529ead6251b09c22e037448a0d" #200_50
     # "lottery_49d62984dbfd626736d5fe53513edac9",
     # "lottery_0fb9604a3c0ead8f41984073b4129f13"
     # "lottery_dd39712abe0934c13324a77320fe238c"
 ]
 DESCRIPTIONS = [
-    "mnist_lenet_200_50"
+    "mnist_lenet_400_50"
+    # "mnist_lenet_200_50"
     # "mnist_lenet_50_30"
     # "mnist_lenet_100_50",
     # "mnist_lenet_100"
 ]
 PATH_END_LOTTO = "/replicate_1/level_0/main/model_ep0_it0.pth"
 D = 5
-# with open('spectral_expansions_randomized_1.csv', 'w', newline='') as csvfile:
+
+'''Random Submatrix Creation'''
+
+# with open('spectral_expansions_randomized_400_50.csv', 'w', newline='') as csvfile:
 #     writer = csv.writer(csvfile, delimiter=',')
 #     writer.writerow(['Model', 'Level', "Exp Number", 'Sparsity', 'Spectral Expansion', 'Performance', 'is_lotto'])
 #     for index, p in enumerate(PATHS):
@@ -232,6 +241,8 @@ D = 5
                 
 #                 writer.writerow([DESCRIPTIONS[index], l, i, sparsity, spectral_expansion])
 
+'''Other Stuff'''
+
             # A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
             # # A = regularize_A(A, D)
             # del_A = remove_disconnections(A)
@@ -243,8 +254,9 @@ D = 5
             
             # writer.writerow([DESCRIPTIONS[index], l, sparsity, spectral_expansion])
 
-
-## THIS PART IS FOR LEVERAGE SCORES
+'''
+THIS PART IS FOR LEVERAGE SCORES
+'''
 
 # with open('leverages_3.csv', 'w', newline='') as csvfile:
 #     writer = csv.writer(csvfile, delimiter=',')
@@ -313,42 +325,63 @@ D = 5
 CODE FOR PLOTTING: Sparsity vs. Spectral Expansion
 '''
   
-x = []
-y = []
-x_rand = []
-y_rand = []
+# x = []
+# y = []
+# x_rand = []
+# y_rand = []
   
-with open('spectral_expansions_200_50.csv','r') as csvfile:
-    plots = csv.reader(csvfile, delimiter = ',')
+# with open('spectral_expansions_400_50.csv','r') as csvfile:
+#     plots = csv.reader(csvfile, delimiter = ',')
       
-    for row in plots:
-        x.append(row[2])
-        y.append(row[3])
+#     for row in plots:
+#         x.append(row[2])
+#         y.append(row[3])
 
-x = [float(i) for i in x[1:]]
-y = [float(i) for i in y[1:]]
+# x = [float(i) for i in x[1:]]
+# y = [float(i) for i in y[1:]]
 
-with open('spectral_expansions_randomized_1.csv','r') as csvfile:
-    plots = csv.reader(csvfile, delimiter = ',')
+# with open('spectral_expansions_randomized_400_50.csv','r') as csvfile:
+#     plots = csv.reader(csvfile, delimiter = ',')
       
-    for row in plots:
-        x_rand.append(row[3])
-        y_rand.append(row[4])
+#     for row in plots:
+#         x_rand.append(row[3])
+#         y_rand.append(row[4])
 
-x_rand = np.array([float(i) for i in x_rand[1:]])
-x_rand = np.average(x_rand.reshape(-1, 5), axis=1)
-print(x_rand)
+# x_rand = np.array([float(i) for i in x_rand[1:]])
+# x_rand = np.average(x_rand.reshape(-1, 5), axis=1)
+# print(x_rand)
 
-y_rand = np.array([float(i) for i in y_rand[1:]])
-y_rand_std = np.std(y_rand.reshape(-1, 5), axis=1)
-y_rand = np.average(y_rand.reshape(-1, 5), axis=1)
-print(y_rand)
-print(y_rand_std)
+# y_rand = np.array([float(i) for i in y_rand[1:]])
+# y_rand_std = np.std(y_rand.reshape(-1, 5), axis=1)
+# y_rand = np.average(y_rand.reshape(-1, 5), axis=1)
+# print(y_rand)
+# print(y_rand_std)
 
-plt.scatter(x, y, c='orange', marker='x', label="lottery")
-plt.errorbar(x_rand, y_rand, yerr=(2*y_rand_std), linestyle=None, c='blue', marker = "o", label = "random submatrix")
-plt.xlabel('Sparsity')
-plt.ylabel('Spectral Expansion')
-plt.title('Sparsity vs. Spectral Expansion, mnist_lenet_200_50')
-plt.legend()
-plt.show()
+# plt.scatter(x, y, c='orange', marker='x', label="lottery")
+# plt.errorbar(x_rand, y_rand, yerr=(2*y_rand_std), linestyle=None, c='blue', marker = "o", label = "random submatrix")
+# plt.xlabel('Sparsity')
+# plt.ylabel('Spectral Expansion')
+# plt.title('Sparsity vs. Spectral Expansion, mnist_lenet_400_50')
+# plt.legend()
+# plt.show()
+
+'''Code for Graphing Sparsity vs. Performance'''
+
+# x = []
+# y = []
+
+# with open('spectral_expansions_200_50.csv','r') as csvfile:
+#     plots = csv.reader(csvfile, delimiter = ',')
+      
+#     for row in plots:
+#         x.append(row[2])
+#         y.append(row[4])
+
+# x = [float(i) for i in x[1:]]
+# y = [float(i) for i in y[1:]]
+
+# plt.scatter(x, y, c='orange', marker='x', label="lottery")
+# plt.xlabel('Sparsity')
+# plt.ylabel('Performance')
+# plt.title('Sparsity vs. Performance, mnist_lenet_200_50')
+# plt.show()
