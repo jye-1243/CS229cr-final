@@ -167,68 +167,70 @@ def get_fiedler(A):
     return w[1]
 
 
-PATH_START = "../open_lth_data/"
-LEVELS = 20
+PATH_START = "open_lth_data/"
+LEVELS = 5
 
 PATHS = [
-    "lottery_49d62984dbfd626736d5fe53513edac9",
+    "lottery_10fb17529ead6251b09c22e037448a0d"
+    # "lottery_49d62984dbfd626736d5fe53513edac9",
     # "lottery_0fb9604a3c0ead8f41984073b4129f13"
     # "lottery_dd39712abe0934c13324a77320fe238c"
 ]
 DESCRIPTIONS = [
-    "mnist_lenet_50_30"
+    "mnist_lenet_200_50"
+    # "mnist_lenet_50_30"
     # "mnist_lenet_100_50",
     # "mnist_lenet_100"
 ]
 PATH_END_LOTTO = "/replicate_1/level_0/main/model_ep0_it0.pth"
 D = 5
-with open('spectral_expansions_randomized_1.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(['Model', 'Level', "Exp Number", 'Sparsity', 'Spectral Expansion', 'Performance', 'is_lotto'])
-    for index, p in enumerate(PATHS):
-        PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
-        network = torch.load(PATH_LOTTO)
+# with open('spectral_expansions_randomized_1.csv', 'w', newline='') as csvfile:
+#     writer = csv.writer(csvfile, delimiter=',')
+#     writer.writerow(['Model', 'Level', "Exp Number", 'Sparsity', 'Spectral Expansion', 'Performance', 'is_lotto'])
+#     for index, p in enumerate(PATHS):
+#         PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
+#         network = torch.load(PATH_LOTTO)
 
-        for l in range(LEVELS):
-            print(l)
+#         for l in range(LEVELS):
+#             print(l)
             
-            NUM_OUTPUTS = 10
+#             NUM_OUTPUTS = 10
 
-            TOTAL_SIZE = 10
-            PATH_MASK = PATH_START + p + get_mask_from_level(l)
+#             TOTAL_SIZE = 10
+#             PATH_MASK = PATH_START + p + get_mask_from_level(l)
 
-            j = open(PATH_START + p + get_sparsity_report(l))
+#             j = open(PATH_START + p + get_sparsity_report(l))
 
-            sparsity_report = json.load(j)
-            sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
-            # mask = torch.load(PATH_MASK)
+#             sparsity_report = json.load(j)
+#             sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
+#             # mask = torch.load(PATH_MASK)
 
-            block_sizes = []
-            blocks = []
+#             block_sizes = []
+#             blocks = []
 
-            mask_blocks = []
+#             mask_blocks = []
 
-            for i in network:
-                if 'weight' in i:
-                    TOTAL_SIZE += np.shape(network[i])[1]
-                    block_sizes.append(np.shape(network[i])[1])
-                    blocks.append(network[i])
+#             for i in network:
+#                 if 'weight' in i:
+#                     TOTAL_SIZE += np.shape(network[i])[1]
+#                     block_sizes.append(np.shape(network[i])[1])
+#                     blocks.append(network[i])
 
-            # for i in mask:
-            #     if 'weight' in i:
-            #         mask_blocks.append(mask[i])
+#             # for i in mask:
+#             #     if 'weight' in i:
+#             #         mask_blocks.append(mask[i])
 
-            block_sizes.append(10)
+#             block_sizes.append(10)
 
-            for i in range(3):
-                print(i)
-                A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
-                A = prune_matrix(A, 1-sparsity)
-                del_A = remove_disconnections(A)
+#             for i in range(5):
+#                 print(i)
+#                 A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+#                 A = prune_matrix(A, 1-sparsity)
+#                 del_A = remove_disconnections(A)
                 
-                spectral_expansion = spectral_expansion_from_A(del_A)
+#                 spectral_expansion = spectral_expansion_from_A(del_A)
                 
-                writer.writerow([DESCRIPTIONS[index], l, i, sparsity, spectral_expansion])
+#                 writer.writerow([DESCRIPTIONS[index], l, i, sparsity, spectral_expansion])
 
             # A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
             # # A = regularize_A(A, D)
@@ -305,4 +307,48 @@ with open('spectral_expansions_randomized_1.csv', 'w', newline='') as csvfile:
 #             plt.show()
 
 #             writer.writerow([DESCRIPTIONS[index], l, sparsity, np.mean(leverages), np.std(leverages)])
-            
+
+
+'''
+CODE FOR PLOTTING: Sparsity vs. Spectral Expansion
+'''
+  
+x = []
+y = []
+x_rand = []
+y_rand = []
+  
+with open('spectral_expansions_200_50.csv','r') as csvfile:
+    plots = csv.reader(csvfile, delimiter = ',')
+      
+    for row in plots:
+        x.append(row[2])
+        y.append(row[3])
+
+x = [float(i) for i in x[1:]]
+y = [float(i) for i in y[1:]]
+
+with open('spectral_expansions_randomized_1.csv','r') as csvfile:
+    plots = csv.reader(csvfile, delimiter = ',')
+      
+    for row in plots:
+        x_rand.append(row[3])
+        y_rand.append(row[4])
+
+x_rand = np.array([float(i) for i in x_rand[1:]])
+x_rand = np.average(x_rand.reshape(-1, 5), axis=1)
+print(x_rand)
+
+y_rand = np.array([float(i) for i in y_rand[1:]])
+y_rand_std = np.std(y_rand.reshape(-1, 5), axis=1)
+y_rand = np.average(y_rand.reshape(-1, 5), axis=1)
+print(y_rand)
+print(y_rand_std)
+
+plt.scatter(x, y, c='orange', marker='x', label="lottery")
+plt.errorbar(x_rand, y_rand, yerr=(2*y_rand_std), linestyle=None, c='blue', marker = "o", label = "random submatrix")
+plt.xlabel('Sparsity')
+plt.ylabel('Spectral Expansion')
+plt.title('Sparsity vs. Spectral Expansion, mnist_lenet_200_50')
+plt.legend()
+plt.show()
