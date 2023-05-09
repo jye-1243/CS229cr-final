@@ -18,12 +18,27 @@ y = []
 x_rand = []
 y_rand = []
   
-with open('fiedler_3.csv','r') as csvfile:
+with open('spectral_expansions_2.csv','r') as csvfile:
     plots = csv.reader(csvfile, delimiter = ',')
       
     for row in plots:
         x.append(row[2])
         y.append(row[3])
+
+with open('spectral_expansions_randomized_2.csv','r') as csvfile:
+    plots = csv.reader(csvfile, delimiter = ',')
+      
+    for row in plots:
+        x_rand.append(row[3])
+        y_rand.append(row[4])
+
+x_rand = np.array([float(i) for i in x_rand[1:]])
+x_rand = np.average(x_rand.reshape(-1, 5), axis=1)
+print(x_rand)
+
+y_rand = np.array([float(i) for i in y_rand[1:]])
+y_rand_std = np.std(y_rand.reshape(-1, 5), axis=1)
+y_rand = np.average(y_rand.reshape(-1, 5), axis=1)
 
 for i,v in enumerate(x):
     if v == '0j':
@@ -75,16 +90,16 @@ y = [float(i) for i in y[1:]]
 print(y)
 fig, ax1 = plt.subplots()
 ax1.set_xlabel("Sparsity (Log Scale)'")
-ax1.set_title("Test Accuracy and Fiedler Value Across Sparsity, mnist_lenet_100")
+ax1.set_title("Test Accuracy and Spectral Expansion Delta, mnist_lenet_100_50")
 
 ax2 = ax1.twinx() 
 
-ax1.plot(x, y, c='blue', marker='o', label="Fiedler Value")
-ax2.plot(x, np.array(PERFORMANCE_3), c='orange', marker='x', label="Performance")
-ax1.set_ylabel("Fiedler Value")
+ax1.plot(x, np.absolute(y - y_rand), c='blue', marker='o', label="Spectral Expansion Delta")
+ax2.plot(x, np.array(PERFORMANCE_2), c='orange', marker='x', label="Performance")
+ax1.set_ylabel("Spectral Expansion Delta Value")
 ax2.set_ylabel('Performance on Test Data')
 plt.xscale("log")
 ax1.legend(loc=4)
 ax2.legend(loc=0)
-plt.savefig('mnist_lenet_100_performance_v_F.png')
+plt.savefig('revised_mnist_lenet_100_50_performance_v_spectral.png')
 plt.show()

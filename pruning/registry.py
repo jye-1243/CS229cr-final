@@ -14,7 +14,7 @@ registered_strategies = {'sparse_global': sparse_global.Strategy}
 
 def get(pruning_hparams: PruningHparams):
     """Get the pruning function."""
-
+    print(registered_strategies[pruning_hparams.pruning_strategy])
     return partial(registered_strategies[pruning_hparams.pruning_strategy].prune,
                    copy.deepcopy(pruning_hparams))
 
