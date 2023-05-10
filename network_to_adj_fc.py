@@ -225,14 +225,14 @@ PATH_START = "../open_lth_data/"
 LEVELS = 20
 
 PATHS = [
-    #"lottery_49d62984dbfd626736d5fe53513edac9",
+    "lottery_49d62984dbfd626736d5fe53513edac9",
     #"lottery_0fb9604a3c0ead8f41984073b4129f13"
-    "lottery_dd39712abe0934c13324a77320fe238c"
+    #"lottery_dd39712abe0934c13324a77320fe238c"
 ]
 DESCRIPTIONS = [
-    #"mnist_lenet_50_30"
+    "mnist_lenet_50_30"
     #"mnist_lenet_100_50",
-    "mnist_lenet_100"
+    #"mnist_lenet_100"
 ]
 PATH_END_LOTTO = "/replicate_1/level_0/main/model_ep0_it0.pth"
 
@@ -280,48 +280,48 @@ PATH_END_LOTTO = "/replicate_1/level_0/main/model_ep0_it0.pth"
 #             fiedler = get_fiedler(del_A)
 #             writer.writerow([DESCRIPTIONS[index], l, sparsity, fiedler])
 
-with open('fiedler_3_randomized.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(['Model', 'Level', "Exp No", 'Sparsity', 'Fiedler'])
-    for index, p in enumerate(PATHS):
-        PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
-        network = torch.load(PATH_LOTTO)
+# with open('fiedler_3_randomized.csv', 'w', newline='') as csvfile:
+#     writer = csv.writer(csvfile, delimiter=',')
+#     writer.writerow(['Model', 'Level', "Exp No", 'Sparsity', 'Fiedler'])
+#     for index, p in enumerate(PATHS):
+#         PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
+#         network = torch.load(PATH_LOTTO)
 
-        NUM_OUTPUTS = 10
+#         NUM_OUTPUTS = 10
 
-        TOTAL_SIZE = 10
-        block_sizes = []
-        blocks = []
+#         TOTAL_SIZE = 10
+#         block_sizes = []
+#         blocks = []
 
-        for i in network:
-            if 'weight' in i:
-                TOTAL_SIZE += np.shape(network[i])[1]
-                block_sizes.append(np.shape(network[i])[1])
-                blocks.append(network[i])
+#         for i in network:
+#             if 'weight' in i:
+#                 TOTAL_SIZE += np.shape(network[i])[1]
+#                 block_sizes.append(np.shape(network[i])[1])
+#                 blocks.append(network[i])
 
-        block_sizes.append(10)
-        for l in range(LEVELS):
-            print(l)
+#         block_sizes.append(10)
+#         for l in range(LEVELS):
+#             print(l)
             
-            PATH_MASK = PATH_START + p + get_mask_from_level(l)
-            j = open(PATH_START + p + get_sparsity_report(l))
-            sparsity_report = json.load(j)
-            sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
-            mask = torch.load(PATH_MASK)
+#             PATH_MASK = PATH_START + p + get_mask_from_level(l)
+#             j = open(PATH_START + p + get_sparsity_report(l))
+#             sparsity_report = json.load(j)
+#             sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
+#             mask = torch.load(PATH_MASK)
 
-            mask_blocks = []
+#             mask_blocks = []
 
-            for i in mask:
-                if 'weight' in i:
-                    mask_blocks.append(mask[i])
+#             for i in mask:
+#                 if 'weight' in i:
+#                     mask_blocks.append(mask[i])
             
-            for n in range(5):
-                A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
-                A = prune_matrix(A, sparsity)
-                del_A = remove_disconnections_tree(A)
+#             for n in range(5):
+#                 A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+#                 A = prune_matrix(A, sparsity)
+#                 del_A = remove_disconnections_tree(A)
 
-                fiedler = get_fiedler(del_A)
-                writer.writerow([DESCRIPTIONS[index], l, n, sparsity, fiedler])
+#                 fiedler = get_fiedler(del_A)
+#                 writer.writerow([DESCRIPTIONS[index], l, n, sparsity, fiedler])
 
 # # _______________________________________________________________________________________________________
 # '''SPECTRAL '''
@@ -396,67 +396,67 @@ with open('fiedler_3_randomized.csv', 'w', newline='') as csvfile:
 
 # ## THIS PART IS FOR LEVERAGE SCORES
 
-# with open('leverages_3.csv', 'w', newline='') as csvfile:
-#     writer = csv.writer(csvfile, delimiter=',')
-#     writer.writerow(['Model', 'Level', 'Sparsity', 'Average Leverage Score', 'Leverage STDev', 'Performance', 'is_lotto'])
-#     for index, p in enumerate(PATHS):
-#         PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
-#         network = torch.load(PATH_LOTTO)
+with open('leverages_1.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(['Model', 'Level', 'Sparsity', 'Average Leverage Score', 'Leverage STDev', 'Performance', 'is_lotto'])
+    for index, p in enumerate(PATHS):
+        PATH_LOTTO = PATH_START + p + PATH_END_LOTTO
+        network = torch.load(PATH_LOTTO)
 
-#         block_sizes = []
-#         blocks = []
+        block_sizes = []
+        blocks = []
             
-#         NUM_OUTPUTS = 10
+        NUM_OUTPUTS = 10
 
-#         TOTAL_SIZE = 10
+        TOTAL_SIZE = 10
 
-#         for i in network:
-#             if 'weight' in i:
-#                 TOTAL_SIZE += np.shape(network[i])[1]
-#                 block_sizes.append(np.shape(network[i])[1])
-#                 blocks.append(network[i])
+        for i in network:
+            if 'weight' in i:
+                TOTAL_SIZE += np.shape(network[i])[1]
+                block_sizes.append(np.shape(network[i])[1])
+                blocks.append(network[i])
 
-#         block_sizes.append(10)
+        block_sizes.append(10)
 
-#         unmasked_A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE)
-#         unmasked_leverages = leverage_from_A(unmasked_A)
+        unmasked_A = layers_to_adj_matrix(blocks, block_sizes, TOTAL_SIZE)
+        unmasked_leverages = leverage_from_A(unmasked_A)
 
-#         for l in range(LEVELS):
+        for l in range(LEVELS):
 
-#             PATH_MASK = PATH_START + p + get_mask_from_level(l)
+            PATH_MASK = PATH_START + p + get_mask_from_level(l)
 
-#             j = open(PATH_START + p + get_sparsity_report(l))
+            j = open(PATH_START + p + get_sparsity_report(l))
 
-#             sparsity_report = json.load(j)
-#             sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
-#             mask = torch.load(PATH_MASK)
+            sparsity_report = json.load(j)
+            sparsity = sparsity_report["unpruned"] / sparsity_report["total"]
+            mask = torch.load(PATH_MASK)
 
-#             mask_blocks = []
+            mask_blocks = []
 
-#             for i in mask:
-#                 if 'weight' in i:
-#                     mask_blocks.append(mask[i])
+            for i in mask:
+                if 'weight' in i:
+                    mask_blocks.append(mask[i])
 
-#             masked_A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
-#             leverages = np.multiply(unmasked_leverages, masked_A)
+            masked_A = layers_to_unweighted_adj_matrix(blocks, block_sizes, TOTAL_SIZE, mask=mask_blocks)
+            leverages = np.multiply(unmasked_leverages, masked_A)
 
-#             leverages = leverages.flatten()
+            leverages = leverages.flatten()
 
-#             leverages = leverages[leverages != 0]
+            leverages = leverages[leverages != 0]
 
-#             # Creating histogram
-#             fig, ax = plt.subplots(figsize =(10, 7))
-#             ax.hist(leverages)
-#             # Adding extra features   
-#             plt.xlabel("Leverage Scores")
-#             plt.ylabel("Count")
+            # Creating histogram
+            fig, ax = plt.subplots(figsize =(10, 7))
+            ax.hist(leverages, density=True)
+            # Adding extra features   
+            plt.xlabel("Leverage Scores")
+            plt.ylabel("Density")
             
-#             plt.title('Leverage Scores for ' + DESCRIPTIONS[index] + " At Sparsity of " + str(sparsity))
-#             # Show plot
-#             plt.savefig(DESCRIPTIONS[index] + "_" + str(l) + ".png")
-#             plt.show()
+            plt.title('Leverage Scores for ' + DESCRIPTIONS[index] + " At Sparsity of " + str(sparsity))
+            # Show plot
+            plt.savefig("revised_" + DESCRIPTIONS[index] + "_" + str(l) + ".png")
+            plt.show()
 
-#             writer.writerow([DESCRIPTIONS[index], l, sparsity, np.mean(leverages), np.std(leverages)])
+            writer.writerow([DESCRIPTIONS[index], l, sparsity, np.mean(leverages), np.std(leverages)])
 
 
 # print(spectral_expansion_from_A(np.array([[1, 7, 4], [7, 6, 9], [4, 9, 1]])))
